@@ -13,11 +13,10 @@ function calculateDday() {
 
     // 날짜 차이 계산 (밀리초 차이 → 일수 변환)
     const diffTime = koreaDateOnly - startDateOnly;
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)); // +1 제거
-    const adjustedDays = diffDays - 1; // 하루 빼기
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1; // 1일차 기준
 
     // 결과 출력
-    document.getElementById("dDayCounter").textContent = `방송 ${adjustedDays}일차`;
+    document.getElementById("dDayCounter").textContent = `방송 ${diffDays}일차`;
 }
 
 function scheduleDailyUpdate() {
@@ -37,7 +36,7 @@ function scheduleDailyUpdate() {
     // 자정에 D-Day를 다시 계산하도록 설정
     setTimeout(() => {
         calculateDday();
-        scheduleDailyUpdate();
+        scheduleDailyUpdate(); // 다음 자정을 위해 재호출
     }, timeUntilMidnight);
 }
 
