@@ -1,40 +1,46 @@
-// KST(Asia/Seoul) 기준으로 '연-월-일'만 가진 날짜 객체(UTC anchor) 만들기
-function dateOnlyInTZ(date = new Date(), timeZone = 'Asia/Seoul') {
-  const fmt = new Intl.DateTimeFormat('en-CA', {
-    timeZone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  });
-  const [y, m, d] = fmt.format(date).split('-').map(Number);
-  // 날짜만 비교하도록 UTC 자정 기준 앵커 생성 (시간대 영향 제거)
-  return new Date(Date.UTC(y, m - 1, d));
-}
-
 function calculateDday() {
-  // 시작일을 'KST 달력 날짜'로 고정
-  const startDateOnlyKST = dateOnlyInTZ(new Date('2024-09-11'), 'Asia/Seoul');
-  const todayOnlyKST = dateOnlyInTZ(new Date(), 'Asia/Seoul');
+    const startDate = new Date(Date.UTC(2024, 8, 11)); // 시작 날짜 (9월 11일, 월은 0부터 시작)
 
-  const diffTime = todayOnlyKST - startDateOnlyKST;
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)); // +1/-1 없음
+    // 현재 GMT 시간
+    const now = new Date();
 
-  document.getElementById("dDayCounter").textContent = `방송 ${diffDays}일차`;
+    // GMT -> KST 변환 (9시간 더하기)
+    const koreaTime = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+
+    // 시, 분, 초 제거하여 날짜만 비교
+    const startDateOnly = new Date(startDate.getUTCFullYear(), startDate.getUTCMonth(), startDate.getUTCDate());
+    const koreaDateOnly = new Date(koreaTime.getUTCFullYear(), koreaTime.getUTCMonth(), koreaTime.getUTCDate());
+
+    // 날짜 차이 계산 (밀리초 차이 → 일수 변환)
+    const diffTime = koreaDateOnly - startDateOnly;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)); // +1 제거
+    const adjustedDays = diffDays - 1; // 하루 빼기
+
+    // 결과 출력
+    document.getElementById("dDayCounter").textContent = `방송 ${adjustedDays}일차`;
 }
 
 function scheduleDailyUpdate() {
-  // 다음 KST 자정에 다시 계산
-  const now = new Date();
-  const todayKST = dateOnlyInTZ(now, 'Asia/Seoul'); // KST 자정 앵커
-  const nextMidnightKST_UTCms = todayKST.getTime() + 24 * 60 * 60 * 1000;
-  const msUntilNextMidnight = nextMidnightKST_UTCms - now.getTime();
+    const now = new Date();
 
-  setTimeout(() => {
-    calculateDday();
-    scheduleDailyUpdate();
-  }, msUntilNextMidnight);
+    // 다음 자정 시간 계산
+    const nextMidnight = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() + 1, // 다음 날로 설정
+        0, 0, 0, 0 // 자정 설정
+    );
+
+    // 자정까지 남은 시간 계산 (밀리초)
+    const timeUntilMidnight = nextMidnight.getTime() - now.getTime();
+
+    // 자정에 D-Day를 다시 계산하도록 설정
+    setTimeout(() => {
+        calculateDday();
+        scheduleDailyUpdate();
+    }, timeUntilMidnight);
 }
 
 // 실행
-calculateDday();
-scheduleDailyUpdate();
+calculateDday(); // 초기 D-Day 계산
+scheduleDailyUpdate(); // 자정 업데이트 예약
