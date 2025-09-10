@@ -1,5 +1,5 @@
 function calculateDday() {
-    const startDate = new Date(Date.UTC(2024, 8, 11)); // 시작 날짜 (9월 11일, 월은 0부터 시작)
+    const startDate = new Date(Date.UTC(2024, 8, 12)); // 시작 날짜 (9월 11일, 월은 0부터 시작)
 
     // 현재 GMT 시간
     const now = new Date();
